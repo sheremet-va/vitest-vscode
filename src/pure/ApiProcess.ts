@@ -5,7 +5,7 @@ import type { CancellationToken } from 'vscode'
 import kill from 'tree-kill'
 import { getConfig } from '../config'
 import { log } from '../log'
-import { execWithLog, filterColorFormatOutput, sanitizeFilePath } from './utils'
+import { DeferPromise, createDefer, execWithLog, filterColorFormatOutput, sanitizeFilePath } from './utils'
 import { buildWatchClient } from './watch/client'
 
 type Handlers = Partial<WebSocketEvents> & { log?: (msg: string) => void; onUpdate?: (files: File[]) => void }
@@ -78,16 +78,30 @@ export class ApiProcess {
     log.info('[RUN.cwd]', cwd)
 
     const logs = [] as string[]
+    let timerPromise: DeferPromise<void> | undefined
     let timer: any
+
+    const onFinished = this.handlers.onFinished
+    if (onFinished) {
+      this.handlers.onFinished = (...args) => {
+        if (timerPromise)
+          timerPromise.then(() => onFinished(...args))
+        else
+          onFinished(...args)
+      }
+    }
+
     const debouncedLog = (line: string) => {
       logs.push(line)
       if (this.recordOutput)
         this.output.push(line)
 
       clearTimeout(timer)
+      timerPromise = createDefer()
       timer = setTimeout(() => {
         _log(logs.join('\r\n'))
         logs.length = 0
+        timerPromise?.resolve()
       }, 200)
     }
     if (!this.customStartProcess) {
