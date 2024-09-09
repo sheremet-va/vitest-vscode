@@ -2,7 +2,7 @@
   "publisher": "vitest",
   "name": "explorer",
   "displayName": "Vitest",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "packageManager": "pnpm@8.15.3",
   "description": "A Vite-native testing framework. It's fast!",
   "author": "Vitest Team",
@@ -245,7 +245,6 @@
     "tsup": "^8.0.1",
     "tsx": "^4.7.1",
     "typescript": "^5.5.3",
-    "vitest": "^2.0.5",
     "which": "^4.0.0",
     "ws": "^8.16.0"
   },
